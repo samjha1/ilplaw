@@ -14,13 +14,44 @@
             <div class="form-row">
                 <div class="col-sm-12 form-group">
                     <label for="" class="control-label">COURTS/TRIBUNAL*</label>
-                    <select name="court" id="court" onchange="navigateToPage()" class="form-control">
+                    <select name="court" id="courts" onchange="navigateToPage()" class="form-control">
                         <option value="">Select Court</option>
                         <option value="./index.php?page=district_court">District Court</option>
                         <option value="./index.php?page=matters_add">Supreme Court</option>
-                        <option value="page3.php">Court</option>
+                        <option value="./index.php?page=High_Court">High Court</option>
                     </select>
                 </div>
+
+
+                <div class="col-4 form-group">
+    <label class="control-label">STATE</label>
+    <select id="state" name="state" class="form-control">
+        <option value="">Select State</option>
+    </select>
+</div>
+
+
+<div class="col-4 form-group">
+    <label class="control-label">districts</label>
+    <select id="district" name="district" class="form-control">
+        <option value="">Select districts</option>
+    </select>
+</div>
+
+<div class="col-4 form-group">
+    <label class="control-label">COURT-COMPLEX</label>
+    <select id="complexe" name="complexe" class="form-control">
+        <option value="">Select complexe</option>
+    </select>
+</div>
+
+
+<div class="col-4 form-group">
+    <label class="control-label">COURT</label>
+    <select id="court" name="court" class="form-control">
+        <option value="">Select courts</option>
+    </select>
+</div>
 
 
                 <div class="col-4 form-group">
@@ -48,7 +79,7 @@
                 <div class="col-4 form-group">
                     <label class="control-label">registrationNumber</label>
                     <input type="text" id="registrationNumber" name="registrationNumber" class="form-control" readonly>
-                </div>     
+                </div>
                 <div class="col-4 form-group">
                     <label class="control-label">registrationDate</label>
                     <input type="text" id="registrationDate" name="registrationDate" class="form-control" readonly>
@@ -75,7 +106,8 @@
                 </div>
                 <div class="col-4 form-group">
                     <label class="control-label">courtNumberAndJudge</label>
-                    <input type="text" id="courtNumberAndJudge" name="courtNumberAndJudge" class="form-control" readonly>
+                    <input type="text" id="courtNumberAndJudge" name="courtNumberAndJudge" class="form-control"
+                        readonly>
                 </div>
                 <div class="col-4 form-group">
                     <label class="control-label">petitioners</label>
@@ -87,11 +119,13 @@
                 </div>
                 <div class="col-4 form-group">
                     <label class="control-label">petitionerAdvocates</label>
-                    <input type="text" id="petitionerAdvocates" name="petitionerAdvocates" class="form-control" readonly>
+                    <input type="text" id="petitionerAdvocates" name="petitionerAdvocates" class="form-control"
+                        readonly>
                 </div>
                 <div class="col-4 form-group">
                     <label class="control-label">respondentAdvocates</label>
-                    <input type="text" id="respondentAdvocates" name="respondentAdvocates" class="form-control" readonly>
+                    <input type="text" id="respondentAdvocates" name="respondentAdvocates" class="form-control"
+                        readonly>
                 </div>
                 <div class="col-4 form-group">
                     <label class="control-label">acts</label>
@@ -145,7 +179,8 @@
 
 
 
-                <button id="fetch_button" class="btn btn-primary">Fetch Case Details</button>
+                <button id="fetchCase" class="btn btn-primary">Fetch Case</button>
+
 
             </div>
         </form>
@@ -219,13 +254,13 @@
                         document.getElementById("acts").value = data.actsAndSections.acts || "No type available";
                         document.getElementById("sections").value = data.actsAndSections.sections || "No type available";
                         if (data.history && data.history.length > 0) {
-                         const historyItem = data.history[0]; // Accessing the first item in history array
+                            const historyItem = data.history[0]; // Accessing the first item in history array
 
-                         document.getElementById("judge").value = historyItem.judge || "No type available";
-                         document.getElementById("businessDate").value = historyItem.businessDate || "No type available";
-                         document.getElementById("nextDate").value = historyItem.nextDate || "No type available";
-                         document.getElementById("purpose").value = historyItem.purpose || "No type available";
-                         document.getElementById("url").value = historyItem.url || "No type available";
+                            document.getElementById("judge").value = historyItem.judge || "No type available";
+                            document.getElementById("businessDate").value = historyItem.businessDate || "No type available";
+                            document.getElementById("nextDate").value = historyItem.nextDate || "No type available";
+                            document.getElementById("purpose").value = historyItem.purpose || "No type available";
+                            document.getElementById("url").value = historyItem.url || "No type available";
                         }
                         document.getElementById("policeStation").value = data.firstInformationReport.policeStation || "No type available";
                         document.getElementById("firNumber").value = data.firstInformationReport.firNumber || "No type available";
@@ -314,6 +349,107 @@
             });
         });
     });
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: "fetch_states.php", // Ensure this URL is correct
+            type: "GET",
+            dataType: "json",
+            success: function (response) {
+                if (response.states) { // Access the "states" key from the API response
+                    response.states.forEach(function (state) { // Use "state" instead of "states"
+                        $("#state").append(`<option value="${state.id}">${state.name}</option>`);
+                    });
+                } else {
+                    console.log("No states found.");
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log("Error fetching states:", error);
+            }
+        });
+    
+                // Fetch districts when state is selected
+                $("#state").on("change", function () {
+                var stateId = $(this).val();
+                if (stateId) {
+                    $.ajax({
+                        url: "fetch_districts.php", // PHP file to call the external API
+                        type: "POST",
+                        data: { stateId: stateId },
+                        dataType: "json",
+                        success: function (response) {
+                            $("#district").html('<option value="">Select District</option>'); // Reset dropdown
+                            if (response.districts) {
+                                response.districts.forEach(function (district) {
+                                    $("#district").append(`<option value="${district.id}">${district.name}</option>`);
+                                });
+                            } else {
+                                console.log("No districts found.");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error fetching districts:", error);
+                        }
+                    });
+                }
+            });
+        
+
+                        // Fetch districts when state is selected
+                        $("#district").on("change", function () {
+                var districtId = $(this).val();
+                if (districtId) {
+                    $.ajax({
+                        url: "fetch_Complexes.php", // PHP file to call the external API
+                        type: "POST",
+                        data: { districtId: districtId },
+                        dataType: "json",
+                        success: function (response) {
+                            $("#complexe").html('<option value="">Select complexe</option>'); // Reset dropdown
+                            if (response.complexes) {
+                                response.complexes.forEach(function (complex) {
+                                    $("#complexe").append(`<option value="${complex.id}">${complex.name}</option>`);
+                                });
+                            } else {
+                                console.log("No districts found.");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error fetching districts:", error);
+                        }
+                    });
+                }
+            });
+        $("#complexe").on("change", function () {
+                var complexId  = $(this).val();
+                if (complexId ) {
+                    $.ajax({
+                        url: "fetch_courts.php", // PHP file to call the external API
+                        type: "POST",
+                        data: { complexId : complexId },
+                        dataType: "json",
+                        success: function (response) {
+                            $("#court").html('<option value="">Select court</option>'); // Reset dropdown
+                            if (response.courts) {
+                                response.courts.forEach(function (court) {
+                                    $("#court").append(`<option value="${court.id}">${court.name}</option>`);
+                                });
+                            } else {
+                                console.log("No districts found.");
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error fetching districts:", error);
+                        }
+                    });
+                }
+            });
+    });
+    
 </script>
 
 
